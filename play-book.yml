@@ -1,0 +1,92 @@
+[root@ansible-controller ~]# cat play3.yml
+- name: Copy configuration files from multiple clients
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  vars_files:
+    - /root/secret.yml
+  vars:
+    current_date: "{{ ansible_date_time.date | regex_replace('-', '') }}"
+    local_dest_dir: "/root/backups/"
+  tasks:
+    - name: Fetch configuration file from 10.0.2.11
+      ansible.builtin.fetch:
+        src: /root/client1-config
+        dest: /root/backups/
+        flat: yes
+      delegate_to: 10.0.2.11
+      tags:
+        - fetch
+
+    - name: Fetch configuration file from 10.0.2.12
+      ansible.builtin.fetch:
+        src: /root/client2-config
+        dest: /root/backups/
+        flat: yes
+      delegate_to: 10.0.2.12
+      tags:
+        - fetch
+
+    - name: Fetch configuration file from 10.0.2.13
+      ansible.builtin.fetch:
+        src: /home/client3/client3-config
+        dest: /root/backups/
+        flat: yes
+      delegate_to: 10.0.2.13
+      tags:
+        - fetch
+
+    - name: Fetch configuration file from 10.0.2.14
+      ansible.builtin.fetch:
+        src: /home/client4/client4-config
+        dest: /root/backups/
+        flat: yes
+      delegate_to: 10.0.2.14
+      tags:
+        - fetch
+
+    - name: Rename fetched file from 10.0.2.11
+      ansible.builtin.command:
+        cmd: mv {{ local_dest_dir }}client1-config {{ local_dest_dir }}client1-config_{{ current_date }}.txt
+      tags:
+        - rename
+
+    - name: Rename fetched file from 10.0.2.12
+      ansible.builtin.command:
+        cmd: mv {{ local_dest_dir }}client2-config {{ local_dest_dir }}client2-config_{{ current_date }}.txt
+      tags:
+        - rename
+
+    - name: Rename fetched file from 10.0.2.13
+      ansible.builtin.command:
+        cmd: mv {{ local_dest_dir }}client3-config {{ local_dest_dir }}client3-config_{{ current_date }}.txt
+      tags:
+        - rename
+
+    - name: Rename fetched file from 10.0.2.14
+      ansible.builtin.command:
+        cmd: mv {{ local_dest_dir }}client4-config {{ local_dest_dir }}client4-config_{{ current_date }}.txt
+      tags:
+        - rename
+
+
+    - name: Calculate SHA-256 checksum of the file
+      ansible.builtin.command:
+        cmd: sha256sum {{ local_dest_dir }}client1-config_{{ current_date }}.txt
+      register: checksum_output
+
+    - name: Calculate SHA-256 checksum of the file
+      ansible.builtin.command:
+        cmd: sha256sum {{ local_dest_dir }}client2-config_{{ current_date }}.txt    
+      register: checksum_output
+
+    - name: Calculate SHA-256 checksum of the file
+      ansible.builtin.command:
+        cmd: sha256sum {{ local_dest_dir }}client3-config_{{ current_date }}.txt
+      register: checksum_output
+
+    - name: Calculate SHA-256 checksum of the file
+      ansible.builtin.command:
+        cmd: sha256sum {{ local_dest_dir }}client4-config_{{ current_date }}.txt
+      register: checksum_output
+
