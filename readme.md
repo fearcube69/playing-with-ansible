@@ -10,3 +10,6 @@ To automate
 3. script execute ansible
 
 Maybe add notification to inform backup have been created
+
+ansible-playbook -i host/list/dir playbook/dir is the way to go
+
