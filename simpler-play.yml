@@ -1,0 +1,23 @@
+- name: Copy configuration files from multiple clients
+  hosts: rockman #or the hostname in the inventory
+  vars_files:
+    - /root/secret.yml
+  vars:
+    current_date: "{{ ansible_date_time.date | regex_replace('-', '') }}"
+    local_dest_dir: "/root/backups/"
+  tasks:
+    - name: Gather system facts
+      ansible.builtin.setup:
+
+    - name: Display the current hostname
+      ansible.builtin.debug:
+        msg: "The current hostname is {{ ansible_facts.hostname }}" # grabbed the hostname
+
+    - name: Fetch configuration file from the client
+      ansible.builtin.fetch:
+        src: "/root/{{ ansible_facts.hostname }}-config" 
+        dest: "{{ local_dest_dir }}"
+        flat: yes
+      delegate_to: "{{ inventory_hostname }}"
+      tags:
+        - fetch
